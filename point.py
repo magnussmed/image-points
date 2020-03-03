@@ -1,6 +1,7 @@
 from PIL import Image
 import multiprocessing as mp
 import cv2
+import time
 import numpy as np
 import collections
 import os
@@ -9,7 +10,7 @@ import os
 class Point( object ) :
 	def __init__( self ) :
 		# Set image id
-		self.image_id = '13'
+		self.image_id = '15'
 		self.path = 'assets/img/' + self.image_id + '.jpg'
 		self.photo = Image.open( self.path )
 		self.width, self.height = self.photo.size
@@ -22,23 +23,33 @@ class Point( object ) :
 
 		self.points = []
 
-		# Set sentiment percentage
-		self.senti = 0.25
+		# Set sentiment percentage and averages
+		self.senti = 0.3
+		self.high_average = int( self.average + ( self.senti * self.average ) )
+		self.low_average = int( self.average - ( self.senti * self.average ) )
 
 		# Start middle to top and bottom to middle simultaneously
+		self.points = self.start()
+
+		# Draw points
+		self.draw_points( self.points )
+
+	# Start processes simultaneously
+	# Using the multiprocessing libary we're able to execute multiple functions at once.
+	#
+	# Return self.points
+	def start( self ) :
 		p1Q = mp.Queue()
-		self.p1 = mp.Process( target = self.middle_top, args=(p1Q,))
+		self.p1 = mp.Process( target = self.find_points, args=(p1Q,'mt'))
 
 		p2Q = mp.Queue()
-		self.p2 = mp.Process( target = self.bottom_middle, args=(p2Q,))
+		self.p2 = mp.Process( target = self.find_points, args=(p2Q,'bm'))
 
 		self.p1.start()
 		self.p2.start()
-
-		# Add both queries points (x, y)
 		self.points = p1Q.get() + p2Q.get()
-		self.draw_points( self.points )
 
+		return self.points
 
 	# Get average color from image
 	# For each pixel get the RGB colorset and get average value afterwards
@@ -48,12 +59,13 @@ class Point( object ) :
 		colors = []
 		average = 0
 		for c in self.photo.getdata() :
-			average = int(sum( list(c) ) / 3)
+			average = int( sum( list(c) ) / 3 )
 			colors.append(average)
 
+		average = round(sum(colors) / len(colors))
 		print("Got color-average now! {}".format( average ))
 
-		return round(sum(colors) / len(colors))
+		return average
 
 	# Draw points
 	# Loop through each coordinate set and create a dot on image
@@ -67,60 +79,45 @@ class Point( object ) :
 		cv2.imshow( 'image', self.pointed_image )
 		cv2.waitKey( 0 )
 
-	# From the bottom to the middle
-	# For each pixel from the bottom of the image to the middle
-	# searching for an interesting change in color from average
+	# Find points
+	# Loop through everything and find relevant points
 	#
-	# Return string
-	def bottom_middle( self, q ) :
+	# Return self.points
+	def find_points( self, q, type ) :
 		width = int( self.width )
 		height = int( self.height / 2 )
 
-		# For each x from 0 to total width
+		# Determine whether it's middle-top or bottom-top
+		if type == 'mt' :
+			f = height
+			to = self.height
+		if type == 'bm' :
+			f = 0
+			to = height
+
+		# For each x from 0 --> width
 		for x in range( 0, width ) :
-			# For each y from 0 to half height
-			for y in range( 0, height ) :
+			# For each y from f --> height or self.height
+			for y in range( f, to ) :
 				r, g, b = self.photo.getpixel(( x, y ))
 				average = int( sum([r, g, b]) / 3 )
 
-				# Break if the current average color is above image average * sentiment percentage
-				# or if it is under image average * sentiment percentage
-				if int( self.average + (self.senti * self.average) ) > average < int( self.average - (self.senti * self.average) ) :
-					# print( "Point found: x: {}, y: {} {}".format( x,y,(r,g,b)) )
-					self.points.append( ( x, y ) )
+				# Exclude pixels with the same average color as the image-average
+				if average != self.average :
+					if self.average > 127.5 :
+						# Dark average
+						if self.low_average > average :
+							# print( "Point found: x: {}, y: {} {}".format( x,y,(r,g,b)) )
+							self.points.append( ( x, y ) )
+					else :
+						# Light average
+						if self.high_average < average :
+							# print( "Point found: x: {}, y: {} {}".format( x,y,(r,g,b)) )
+							self.points.append( ( x, y ) )
 			else :
 				continue
 			break
 
-		# Append data to the query object for later use
-		q.put( self.points )
-
-	# From the middle to the top
-	# For each pixel from the bottom of the image to the middle
-	# searching for an interesting change in color from average
-	#
-	# Return string
-	def middle_top( self, q ) :
-		width = int( self.width )
-		height = int( self.height / 2 )
-
-		# For each x from 0 to total width
-		for x in range( 0, width ) :
-			# For each y from half height to full height
-			for y in range( height, self.height ) :
-				r, g, b = self.photo.getpixel(( x, y ))
-				average = int( sum([r, g, b]) / 3 )
-
-				# Break if the current average color is above image average * sentiment percentage
-				# or if it is under image average * sentiment percentage
-				if int( self.average + (self.senti * self.average) ) > average < int( self.average - (self.senti * self.average) ) :
-					# print( "Point found: x: {}, y: {} {}".format( x,y,(r,g,b)) )
-					self.points.append( ( x, y ) )
-			else :
-				continue
-			break
-
-		# Append data to the query object for later use
 		q.put( self.points )
 
 if __name__ == '__main__' :

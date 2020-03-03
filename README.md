@@ -22,6 +22,6 @@ After a few seconds depending on image size, a drawed image will popup as result
 You can find test images in assets/img folder. You are more than welcome to add more images!
 
 ## Tips
-It is possible to change the outcome by increasing or decreasing the sentiment percentage from 0-1. As default it is set to 0.25
+It is possible to change the outcome by increasing or decreasing the sentiment percentage from 0-1. As default it is set to 0.3
 <br><br>
 If you need the point coordinates, simply uncomment the 'point found' print statement.
