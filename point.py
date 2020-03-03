@@ -3,12 +3,13 @@ import multiprocessing as mp
 import cv2
 import numpy as np
 import os
+import time
 
 # Point Class
 class Point( object ) :
 	def __init__( self ) :
 		# Set image id
-		self.image_id = '15'
+		self.image_id = '6'
 		self.path = 'assets/img/' + self.image_id + '.jpg'
 		self.photo = Image.open( self.path )
 		self.width, self.height = self.photo.size
@@ -31,6 +32,8 @@ class Point( object ) :
 
 		# Draw points
 		self.draw_points( self.points )
+
+		print( "--- %s seconds ---" % ( time.time() - start_time ) )
 
 	# Start processes simultaneously
 	# Using the multiprocessing libary we're able to execute multiple functions at once.
@@ -74,8 +77,8 @@ class Point( object ) :
 			cv2.drawMarker( self.pointed_image, (x, y), (132,255,0), markerType = cv2.MARKER_CROSS, markerSize = 2, thickness=1 )
 		cv2.imwrite( 'assets/draw/' + self.image_id + '-point.jpg', self.pointed_image )
 
-		cv2.imshow( 'image', self.pointed_image )
-		cv2.waitKey( 0 )
+		#cv2.imshow( 'image', self.pointed_image )
+		#cv2.waitKey( 0 )
 
 	# Find points
 	# Loop through everything and find relevant points
@@ -119,4 +122,5 @@ class Point( object ) :
 		q.put( self.points )
 
 if __name__ == '__main__' :
+	start_time = time.time()
 	point = Point()
