@@ -19,6 +19,7 @@ class Point( object ) :
 
 		# Photo average color
 		self.average = self.average()
+		print( "--- Find average time: %s seconds ---" % ( time.time() - start_time ) )
 
 		self.points = []
 
@@ -57,13 +58,11 @@ class Point( object ) :
 	#
 	# Return int color
 	def average( self ) :
-		colors = []
-		average = 0
+		count = 0
 		for c in self.photo.getdata() :
-			average = int( sum( list(c) ) / 3 )
-			colors.append(average)
+			count += int( sum( list(c) ) )
 
-		average = round(sum(colors) / len(colors))
+		average = round( ( count / 3 ) / ( self.width * self.height ) )
 		print("Got color-average now! {}".format( average ))
 
 		return average
@@ -77,8 +76,8 @@ class Point( object ) :
 			cv2.drawMarker( self.pointed_image, (x, y), (132,255,0), markerType = cv2.MARKER_CROSS, markerSize = 2, thickness=1 )
 		cv2.imwrite( 'assets/draw/' + self.image_id + '-point.jpg', self.pointed_image )
 
-		#cv2.imshow( 'image', self.pointed_image )
-		#cv2.waitKey( 0 )
+		cv2.imshow( 'image', self.pointed_image )
+		cv2.waitKey( 0 )
 
 	# Find points
 	# Loop through everything and find relevant points
