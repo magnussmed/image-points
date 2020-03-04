@@ -9,7 +9,7 @@ import time
 class Point( object ) :
 	def __init__( self ) :
 		# Set image id
-		self.image_id = '6'
+		self.image_id = '1'
 		self.path = 'assets/img/' + self.image_id + '.jpg'
 		self.photo = Image.open( self.path )
 		self.width, self.height = self.photo.size
@@ -73,7 +73,7 @@ class Point( object ) :
 	# Return save image and open it
 	def draw_points( self, points ) :
 		for x, y in points :
-			cv2.drawMarker( self.pointed_image, (x, y), (132,255,0), markerType = cv2.MARKER_CROSS, markerSize = 2, thickness=1 )
+			cv2.drawMarker( self.pointed_image, ( x, y ), ( 132, 255,0 ), markerType = cv2.MARKER_CROSS, markerSize = 2, thickness=1 )
 		cv2.imwrite( 'assets/draw/' + self.image_id + '-point.jpg', self.pointed_image )
 
 		cv2.imshow( 'image', self.pointed_image )
