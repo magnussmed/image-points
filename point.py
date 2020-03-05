@@ -9,7 +9,7 @@ import time
 class Point( object ) :
 	def __init__( self ) :
 		# Set image id
-		self.image_id = '1'
+		self.image_id = '19'
 		self.path = 'assets/img/' + self.image_id + '.jpg'
 		self.photo = Image.open( self.path )
 		self.width, self.height = self.photo.size
